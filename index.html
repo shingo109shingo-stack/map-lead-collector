@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MAP Lead Collector - Googleãããå¶æ¥­ãªã¹ãèªååé</title>
+<title>MAP Lead Collector - Googleマップ営業リスト自動収集</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>ð</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📍</text></svg>">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
   * { font-family: 'Inter', -apple-system, sans-serif; }
@@ -55,92 +55,92 @@ const { useState, useCallback, useRef, useEffect } = React;
    Demo Data
    ============================================ */
 const DEMO_DATA = {
-  "é£²é£åº": [
-    { name: "ç­ç«ç¼è çèµ", address: "å¤§éªåºå¤§éªå¸ååºæ¢ç°1-2-3", phone: "06-1234-5678", website: "", rating: 4.2, ratings_total: 32 },
-    { name: "éººå± ä¸å¿", address: "å¤§éªåºå¤§éªå¸ååºæ½æ ¹å´2-5-10", phone: "06-2345-6789", website: "", rating: 3.8, ratings_total: 128 },
-    { name: "å¯¿å¸å²ç¹ ãªããã", address: "å¤§éªåºå¤§éªå¸ååºå å³¶1-3-7", phone: "06-3456-7890", website: "https://nakamura-sushi.example.com", rating: 4.5, ratings_total: 245 },
-    { name: "å±éå± ã¼ã¡ã¼ã¡", address: "å¤§éªåºå¤§éªå¸ååºå¤©ç¥æ©3-8-15", phone: "06-4567-8901", website: "", rating: 3.5, ratings_total: 18 },
-    { name: "ã«ãã§ ã¢ã¼ãã³ã°", address: "å¤§éªåºå¤§éªå¸ååºä¸­å´è¥¿2-1-4", phone: "06-5678-9012", website: "", rating: 4.0, ratings_total: 45 },
-    { name: "ç¼é³¥ ã¨ãã¾ã", address: "å¤§éªåºå¤§éªå¸ååºé»å´çº5-12", phone: "06-6789-0123", website: "https://torimaru.example.com", rating: 4.3, ratings_total: 310 },
-    { name: "ä¸­è¯æç é¾é³³", address: "å¤§éªåºå¤§éªå¸ååºè¥¿å¤©æº4-6-2", phone: "06-7890-1234", website: "", rating: 3.9, ratings_total: 67 },
-    { name: "ãå¥½ã¿ç¼ã åæ¿", address: "å¤§éªåºå¤§éªå¸ååºè§ç°çº1-10", phone: "06-8901-2345", website: "https://senba-okonomiyaki.example.com", rating: 4.1, ratings_total: 520 },
-    { name: "ãã©ã è®å²äº­", address: "å¤§éªåºå¤§éªå¸ååºå¤ªèå¯ºçº3-9", phone: "06-9012-3456", website: "", rating: 4.4, ratings_total: 12 },
-    { name: "æ´é£ ã­ããã³ABC", address: "å¤§éªåºå¤§éªå¸ååºèç°2-7-18", phone: "06-0123-4567", website: "", rating: 3.7, ratings_total: 89 },
-    { name: "ä¸²ã«ã ã ãã¾ åæ°å°åº", address: "å¤§éªåºå¤§éªå¸ååºå å³¶æµ1-4-16", phone: "06-1111-2222", website: "https://daruma-kushikatsu.example.com", rating: 4.0, ratings_total: 890 },
-    { name: "ããç¼ã å¤§éªé­", address: "å¤§éªåºå¤§éªå¸ååºæµ®ç°2-3-11", phone: "06-3333-4444", website: "", rating: 3.6, ratings_total: 25 },
-    { name: "éå½æç ã½ã¦ã«å®¶", address: "å¤§éªåºå¤§éªå¸ååºè±å´3-15-5", phone: "06-5555-6666", website: "", rating: 4.1, ratings_total: 41 },
-    { name: "å¤©ã·ã æ°å®¿", address: "å¤§éªåºå¤§éªå¸ååºé¶´éçº4-2", phone: "06-7777-8888", website: "", rating: 4.6, ratings_total: 156 },
-    { name: "ã©ã¼ã¡ã³ æ¥µ", address: "å¤§éªåºå¤§éªå¸ååºä¸æ­³çº3-20", phone: "", website: "", rating: 3.4, ratings_total: 8 },
-    { name: "ã¤ã¿ãªã¢ã³ ãã©ãããªã¢", address: "å¤§éªåºå¤§éªå¸ååºç´æ¢çº6-14", phone: "06-2222-3333", website: "https://trattoria-osaka.example.com", rating: 4.3, ratings_total: 178 },
-    { name: "éæ¿ç¼ã å ", address: "å¤§éªåºå¤§éªå¸ååºå å±±çº1-5", phone: "06-4444-5555", website: "", rating: 4.7, ratings_total: 34 },
-    { name: "ã«ã¬ã¼ ã¹ãã¤ã¹ã­ã¼ã", address: "å¤§éªåºå¤§éªå¸ååºæ«åºçº3-8", phone: "06-6666-7777", website: "", rating: 4.0, ratings_total: 52 },
-    { name: "ã¹ãã¼ã­ãã¦ã¹ ç¥æ¸äº­", address: "å¤§éªåºå¤§éªå¸ååºè¶å±çº12-6", phone: "06-8888-9999", website: "https://kobetei.example.com", rating: 4.4, ratings_total: 430 },
-    { name: "å±éå± ã®ãã¹ãæ¨ªä¸", address: "å¤§éªåºå¤§éªå¸ååºæ± ç°çº9-3", phone: "06-0000-1111", website: "", rating: 3.3, ratings_total: 15 },
+  "飲食店": [
+    { name: "炭火焼肉 牛蔵", address: "大阪府大阪市北区梅田1-2-3", phone: "06-1234-5678", website: "", rating: 4.2, ratings_total: 32 },
+    { name: "麺屋 一心", address: "大阪府大阪市北区曽根崎2-5-10", phone: "06-2345-6789", website: "", rating: 3.8, ratings_total: 128 },
+    { name: "寿司割烹 なかむら", address: "大阪府大阪市北区堂島1-3-7", phone: "06-3456-7890", website: "https://nakamura-sushi.example.com", rating: 4.5, ratings_total: 245 },
+    { name: "居酒屋 ぼちぼち", address: "大阪府大阪市北区天神橋3-8-15", phone: "06-4567-8901", website: "", rating: 3.5, ratings_total: 18 },
+    { name: "カフェ モーニング", address: "大阪府大阪市北区中崎西2-1-4", phone: "06-5678-9012", website: "", rating: 4.0, ratings_total: 45 },
+    { name: "焼鳥 とりまる", address: "大阪府大阪市北区黒崎町5-12", phone: "06-6789-0123", website: "https://torimaru.example.com", rating: 4.3, ratings_total: 310 },
+    { name: "中華料理 龍鳳", address: "大阪府大阪市北区西天満4-6-2", phone: "06-7890-1234", website: "", rating: 3.9, ratings_total: 67 },
+    { name: "お好み焼き 千房", address: "大阪府大阪市北区角田町1-10", phone: "06-8901-2345", website: "https://senba-okonomiyaki.example.com", rating: 4.1, ratings_total: 520 },
+    { name: "うどん 讃岐亭", address: "大阪府大阪市北区太融寺町3-9", phone: "06-9012-3456", website: "", rating: 4.4, ratings_total: 12 },
+    { name: "洋食 キッチンABC", address: "大阪府大阪市北区芝田2-7-18", phone: "06-0123-4567", website: "", rating: 3.7, ratings_total: 89 },
+    { name: "串カツ だるま 北新地店", address: "大阪府大阪市北区堂島浜1-4-16", phone: "06-1111-2222", website: "https://daruma-kushikatsu.example.com", rating: 4.0, ratings_total: 890 },
+    { name: "たこ焼き 大阪鮂", address: "大阪府大阪市北区浮田2-3-11", phone: "06-3333-4444", website: "", rating: 3.6, ratings_total: 25 },
+    { name: "韓国料理 ソウル家", address: "大阪府大阪市北区豊崎3-15-5", phone: "06-5555-6666", website: "", rating: 4.1, ratings_total: 41 },
+    { name: "天ぷら 新宿", address: "大阪府大阪市北区鶴野町4-2", phone: "06-7777-8888", website: "", rating: 4.6, ratings_total: 156 },
+    { name: "ラーメン 極", address: "大阪府大阪市北区万歳町3-20", phone: "", website: "", rating: 3.4, ratings_total: 8 },
+    { name: "イタリアン トラットリア", address: "大阪府大阪市北区紅梅町6-14", phone: "06-2222-3333", website: "https://trattoria-osaka.example.com", rating: 4.3, ratings_total: 178 },
+    { name: "鉄板焼き 匠", address: "大阪府大阪市北区堂山町1-5", phone: "06-4444-5555", website: "", rating: 4.7, ratings_total: 34 },
+    { name: "カレー スパイスロード", address: "大阪府大阪市北区末広町3-8", phone: "06-6666-7777", website: "", rating: 4.0, ratings_total: 52 },
+    { name: "ステーキハウス 神戸亭", address: "大阪府大阪市北区茶屋町12-6", phone: "06-8888-9999", website: "https://kobetei.example.com", rating: 4.4, ratings_total: 430 },
+    { name: "居酒屋 のんべえ横丁", address: "大阪府大阪市北区池田町9-3", phone: "06-0000-1111", website: "", rating: 3.3, ratings_total: 15 },
   ],
-  "ç¾å®¹å®¤": [
-    { name: "hair salon BLOOM", address: "å¤§éªåºå¤§éªå¸ååºè¶å±çº6-20", phone: "06-1234-0001", website: "", rating: 4.5, ratings_total: 28 },
-    { name: "ç¾å®¹å®¤ LUXE", address: "å¤§éªåºå¤§éªå¸ååºæ¢ç°3-1-15", phone: "06-1234-0002", website: "https://luxe-hair.example.com", rating: 4.2, ratings_total: 195 },
-    { name: "ã«ãããã¦ã¹ tanaka", address: "å¤§éªåºå¤§éªå¸ååºå¤©ç¥æ©5-7-3", phone: "06-1234-0003", website: "", rating: 3.9, ratings_total: 42 },
-    { name: "hair make RISE", address: "å¤§éªåºå¤§éªå¸ååºä¸­å´1-9-21", phone: "06-1234-0004", website: "", rating: 4.0, ratings_total: 11 },
-    { name: "ãã¢ã¼ãµã­ã³ Aki", address: "å¤§éªåºå¤§éªå¸ååºè±å´5-4-12", phone: "06-1234-0005", website: "", rating: 4.3, ratings_total: 76 },
-    { name: "HAIR & MAKE EARTH æ¢ç°åº", address: "å¤§éªåºå¤§éªå¸ååºè§ç°çº5-1", phone: "06-1234-0006", website: "https://earth-hair.example.com", rating: 3.8, ratings_total: 340 },
-    { name: "ç¾å®¹å®¤ nico", address: "å¤§éªåºå¤§éªå¸ååºæµ®è±çº8-14", phone: "06-1234-0007", website: "", rating: 4.6, ratings_total: 19 },
-    { name: "salon de coupe", address: "å¤§éªåºå¤§éªå¸ååºå å³¶2-1-30", phone: "06-1234-0008", website: "", rating: 4.1, ratings_total: 55 },
-    { name: "HAIR COLOR CAFE", address: "å¤§éªåºå¤§éªå¸ååºæ½æ ¹å´æ°å°1-3", phone: "06-1234-0009", website: "https://color-cafe.example.com", rating: 4.4, ratings_total: 210 },
-    { name: "çå®¹å®¤ BarBer KING", address: "å¤§éªåºå¤§éªå¸ååºå¤©æº3-4-5", phone: "06-1234-0010", website: "", rating: 3.7, ratings_total: 33 },
-    { name: "total beauty MUSE", address: "å¤§éªåºå¤§éªå¸ååºè¥¿å¤©æº5-1-9", phone: "06-1234-0011", website: "", rating: 4.8, ratings_total: 7 },
-    { name: "hair studio VAIN", address: "å¤§éªåºå¤§éªå¸ååºåæçº6-28", phone: "06-1234-0012", website: "", rating: 4.0, ratings_total: 48 },
-    { name: "ç¾å®¹å®¤ Cocoro", address: "å¤§éªåºå¤§éªå¸ååºèè¿çº10-1", phone: "06-1234-0013", website: "", rating: 4.2, ratings_total: 22 },
-    { name: "AVANCE hair design", address: "å¤§éªåºå¤§éªå¸ååºé¶´éçº1-9", phone: "06-1234-0014", website: "https://avance-hair.example.com", rating: 4.5, ratings_total: 165 },
-    { name: "cut & perm ããã", address: "å¤§éªåºå¤§éªå¸ååºåå¿2-11-6", phone: "06-1234-0015", website: "", rating: 3.5, ratings_total: 14 },
-    { name: "ZEST hair salon", address: "å¤§éªåºå¤§éªå¸ååºæ¬åºæ±1-20", phone: "06-1234-0016", website: "", rating: 4.3, ratings_total: 38 },
-    { name: "hair resort Lino", address: "å¤§éªåºå¤§éªå¸ååºæ±å¤©æº2-8", phone: "06-1234-0017", website: "", rating: 4.1, ratings_total: 61 },
-    { name: "ç¾å®¹å®¤ Calm", address: "å¤§éªåºå¤§éªå¸ååºå±±å´çº1-15", phone: "06-1234-0018", website: "https://calm-beauty.example.com", rating: 4.0, ratings_total: 88 },
-    { name: "ABBEY hair æ¢ç°åº", address: "å¤§éªåºå¤§éªå¸ååºèç°1-12-7", phone: "06-1234-0019", website: "https://abbey-hair.example.com", rating: 4.6, ratings_total: 520 },
-    { name: "ãã¢ãµã­ã³çµ", address: "å¤§éªåºå¤§éªå¸ååºä¸åçº4-7", phone: "06-1234-0020", website: "", rating: 4.4, ratings_total: 9 },
+  "美容室": [
+    { name: "hair salon BLOOM", address: "大阪府大阪市北区茶屋町6-20", phone: "06-1234-0001", website: "", rating: 4.5, ratings_total: 28 },
+    { name: "美容室 LUXE", address: "大阪府大阪市北区梅田3-1-15", phone: "06-1234-0002", website: "https://luxe-hair.example.com", rating: 4.2, ratings_total: 195 },
+    { name: "カットハウス tanaka", address: "大阪府大阪市北区天神橋5-7-3", phone: "06-1234-0003", website: "", rating: 3.9, ratings_total: 42 },
+    { name: "hair make RISE", address: "大阪府大阪市北区中崎1-9-21", phone: "06-1234-0004", website: "", rating: 4.0, ratings_total: 11 },
+    { name: "ヘアーサロン Aki", address: "大阪府大阪市北区豊崎5-4-12", phone: "06-1234-0005", website: "", rating: 4.3, ratings_total: 76 },
+    { name: "HAIR & MAKE EARTH 梅田店", address: "大阪府大阪市北区角田町5-1", phone: "06-1234-0006", website: "https://earth-hair.example.com", rating: 3.8, ratings_total: 340 },
+    { name: "美容室 nico", address: "大阪府大阪市北区浪花町8-14", phone: "06-1234-0007", website: "", rating: 4.6, ratings_total: 19 },
+    { name: "salon de coupe", address: "大阪府大阪市北区堂島2-1-30", phone: "06-1234-0008", website: "", rating: 4.1, ratings_total: 55 },
+    { name: "HAIR COLOR CAFE", address: "大阪府大阪市北区曽根崎新地1-3", phone: "06-1234-0009", website: "https://color-cafe.example.com", rating: 4.4, ratings_total: 210 },
+    { name: "理容室 BarBer KING", address: "大阪府大阪市北区天満3-4-5", phone: "06-1234-0010", website: "", rating: 3.7, ratings_total: 33 },
+    { name: "total beauty MUSE", address: "大阪府大阪市北区西天満5-1-9", phone: "06-1234-0011", website: "", rating: 4.8, ratings_total: 7 },
+    { name: "hair studio VAIN", address: "大阪府大阪市北区南扇町6-28", phone: "06-1234-0012", website: "", rating: 4.0, ratings_total: 48 },
+    { name: "美容室 Cocoro", address: "大阪府大阪市北区菅原町10-1", phone: "06-1234-0013", website: "", rating: 4.2, ratings_total: 22 },
+    { name: "AVANCE hair design", address: "大阪府大阪市北区鶴野町1-9", phone: "06-1234-0014", website: "https://avance-hair.example.com", rating: 4.5, ratings_total: 165 },
+    { name: "cut & perm さくら", address: "大阪府大阪市北区同心2-11-6", phone: "06-1234-0015", website: "", rating: 3.5, ratings_total: 14 },
+    { name: "ZEST hair salon", address: "大阪府大阪市北区本庄東1-20", phone: "06-1234-0016", website: "", rating: 4.3, ratings_total: 38 },
+    { name: "hair resort Lino", address: "大阪府大阪市北区東天満2-8", phone: "06-1234-0017", website: "", rating: 4.1, ratings_total: 61 },
+    { name: "美容室 Calm", address: "大阪府大阪市北区山崎町1-15", phone: "06-1234-0018", website: "https://calm-beauty.example.com", rating: 4.0, ratings_total: 88 },
+    { name: "ABBEY hair 梅田店", address: "大阪府大阪市北区芝田1-12-7", phone: "06-1234-0019", website: "https://abbey-hair.example.com", rating: 4.6, ratings_total: 520 },
+    { name: "ヘアサロン結", address: "大阪府大阪市北区与力町4-7", phone: "06-1234-0020", website: "", rating: 4.4, ratings_total: 9 },
   ],
-  "æ´éª¨é¢": [
-    { name: "æ¢ç°æ´éª¨é¢", address: "å¤§éªåºå¤§éªå¸ååºæ¢ç°2-4-13", phone: "06-5678-0001", website: "", rating: 4.3, ratings_total: 35 },
-    { name: "å¤©å­ã¯ããããæ´éª¨é¢", address: "å¤§éªåºå¤§éªå¸ååºå¤©ç¥æ©6-3-10", phone: "06-5678-0002", website: "https://tenroku-seikotsuin.example.com", rating: 4.1, ratings_total: 128 },
-    { name: "ããã æ´éª¨é¢ ä¸­å´çº", address: "å¤§éªåºå¤§éªå¸ååºä¸­å´è¥¿1-8-24", phone: "06-5678-0003", website: "", rating: 3.9, ratings_total: 18 },
-    { name: "ååºéª¨ç¤ç¯æ­£ã»ã³ã¿ã¼", address: "å¤§éªåºå¤§éªå¸ååºè±å´3-10-2", phone: "06-5678-0004", website: "", rating: 4.5, ratings_total: 47 },
-    { name: "å¤§éªé§åæ´éª¨é¢", address: "å¤§éªåºå¤§éªå¸ååºå å³¶1-5-17", phone: "06-5678-0005", website: "https://ekimae-seikotsuin.example.com", rating: 4.0, ratings_total: 215 },
-    { name: "ã²ããé¼ç¸æ´éª¨é¢", address: "å¤§éªåºå¤§éªå¸ååºæµªè±çº14-33", phone: "06-5678-0006", website: "", rating: 4.7, ratings_total: 12 },
-    { name: "åæ£®çºæ´éª¨é¢", address: "å¤§éªåºå¤§éªå¸ååºåæ£®çº2-1-20", phone: "06-5678-0007", website: "", rating: 3.8, ratings_total: 63 },
-    { name: "ã¹ãã¼ãæ´éª¨é¢ VICTORY", address: "å¤§éªåºå¤§éªå¸ååºè¥¿å¤©æº3-14-6", phone: "06-5678-0008", website: "https://victory-sports.example.com", rating: 4.4, ratings_total: 92 },
-    { name: "ã¾ãããæ´éª¨é¢", address: "å¤§éªåºå¤§éªå¸ååºå¤©æº2-7-14", phone: "06-5678-0009", website: "", rating: 4.2, ratings_total: 29 },
-    { name: "ãããå æ´éª¨é¢ æ¢ç°", address: "å¤§éªåºå¤§éªå¸ååºæ½æ ¹å´2-11-8", phone: "06-5678-0010", website: "", rating: 3.6, ratings_total: 8 },
-    { name: "éª¨ç¤æ´ä½ æ¥½ã", address: "å¤§éªåºå¤§éªå¸ååºå¤ªèå¯ºçº5-15", phone: "06-5678-0011", website: "", rating: 4.0, ratings_total: 41 },
-    { name: "ããããæ´éª¨é¢", address: "å¤§éªåºå¤§éªå¸ååºæ± ç°çº3-1", phone: "06-5678-0012", website: "", rating: 4.6, ratings_total: 22 },
-    { name: "å å³¶ã«ã¤ã­ãã©ã¯ãã£ãã¯", address: "å¤§éªåºå¤§éªå¸ååºå å³¶æµ2-1-29", phone: "06-5678-0013", website: "https://dojima-chiro.example.com", rating: 4.3, ratings_total: 178 },
-    { name: "é·ææ´éª¨é¢", address: "å¤§éªåºå¤§éªå¸ååºé··ææ±2-5-18", phone: "06-5678-0014", website: "", rating: 3.7, ratings_total: 15 },
-    { name: "ããããæ´ä½é¢", address: "å¤§éªåºå¤§éªå¸ååºæ«åºçº1-7", phone: "06-5678-0015", website: "", rating: 4.1, ratings_total: 33 },
-    { name: "æ´éª¨é¢ TSUNAGU", address: "å¤§éªåºå¤§éªå¸ååºé»å´çº12-20", phone: "06-5678-0016", website: "", rating: 4.4, ratings_total: 50 },
-    { name: "æçºé¼ç¸æ´éª¨é¢", address: "å¤§éªåºå¤§éªå¸ååºåæçº7-4", phone: "06-5678-0017", website: "https://ogimachi-hari.example.com", rating: 4.2, ratings_total: 310 },
-    { name: "ã»ã­ã¤ã å¤©æºæ©", address: "å¤§éªåºå¤§éªå¸ååºæ±å¤©æº1-11-13", phone: "06-5678-0018", website: "", rating: 3.9, ratings_total: 6 },
-    { name: "ä¸­æ´¥æ´éª¨é¢", address: "å¤§éªåºå¤§éªå¸ååºä¸­æ´¥1-18-14", phone: "06-5678-0019", website: "", rating: 4.0, ratings_total: 27 },
-    { name: "ã¯ãªæ´éª¨é¢ ååº", address: "å¤§éªåºå¤§éªå¸ååºèåçº9-5", phone: "06-5678-0020", website: "", rating: 4.5, ratings_total: 44 },
+  "整骨院": [
+    { name: "梅田整骨院", address: "大阪府大阪市北区梅田2-4-13", phone: "06-5678-0001", website: "", rating: 4.3, ratings_total: 35 },
+    { name: "天六はりきゅう整骨院", address: "大阪府大阪市北区天神橋6-3-10", phone: "06-5678-0002", website: "https://tenroku-seikotsuin.example.com", rating: 4.1, ratings_total: 128 },
+    { name: "からだ整骨院 中崎町", address: "大阪府大阪市北区中崎西1-8-24", phone: "06-5678-0003", website: "", rating: 3.9, ratings_total: 18 },
+    { name: "北区骨盤矯正センター", address: "大阪府大阪市北区豊崎3-10-2", phone: "06-5678-0004", website: "", rating: 4.5, ratings_total: 47 },
+    { name: "大阪駅前整骨院", address: "大阪府大阪市北区堂島1-5-17", phone: "06-5678-0005", website: "https://ekimae-seikotsuin.example.com", rating: 4.0, ratings_total: 215 },
+    { name: "ひかり鍼灸整骨院", address: "大阪府大阪市北区浪花町14-33", phone: "06-5678-0006", website: "", rating: 4.7, ratings_total: 12 },
+    { name: "南森町整骨院", address: "大阪府大阪市北区南森町2-1-20", phone: "06-5678-0007", website: "", rating: 3.8, ratings_total: 63 },
+    { name: "スポーツ整骨院 VICTORY", address: "大阪府大阪市北区西天満3-14-6", phone: "06-5678-0008", website: "https://victory-sports.example.com", rating: 4.4, ratings_total: 92 },
+    { name: "まごころ整骨院", address: "大阪府大阪市北区天満2-7-14", phone: "06-5678-0009", website: "", rating: 4.2, ratings_total: 29 },
+    { name: "げんき堂整骨院 梅田", address: "大阪府大阪市北区曽根崎2-11-8", phone: "06-5678-0010", website: "", rating: 3.6, ratings_total: 8 },
+    { name: "骨盤整体 楽々", address: "大阪府大阪市北区太融寺町5-15", phone: "06-5678-0011", website: "", rating: 4.0, ratings_total: 41 },
+    { name: "あおぞら整骨院", address: "大阪府大阪市北区池田町3-1", phone: "06-5678-0012", website: "", rating: 4.6, ratings_total: 22 },
+    { name: "堂島カイロプラクティック", address: "大阪府大阪市北区堂島浜2-1-29", phone: "06-5678-0013", website: "https://dojima-chiro.example.com", rating: 4.3, ratings_total: 178 },
+    { name: "長柄整骨院", address: "大阪府大阪市北区長柄東2-5-18", phone: "06-5678-0014", website: "", rating: 3.7, ratings_total: 15 },
+    { name: "やすらぎ整体院", address: "大阪府大阪市北区末広町1-7", phone: "06-5678-0015", website: "", rating: 4.1, ratings_total: 33 },
+    { name: "整骨院 TSUNAGU", address: "大阪府大阪市北区黒崎町12-20", phone: "06-5678-0016", website: "", rating: 4.4, ratings_total: 50 },
+    { name: "扇町鍼灸整骨院", address: "大阪府大阪市北区南扇町7-4", phone: "06-5678-0017", website: "https://ogimachi-hari.example.com", rating: 4.2, ratings_total: 310 },
+    { name: "ほねつぎ 天満橋", address: "大阪府大阪市北区東天満1-11-13", phone: "06-5678-0018", website: "", rating: 3.9, ratings_total: 6 },
+    { name: "中津整骨院", address: "大阪府大阪市北区中津1-18-14", phone: "06-5678-0019", website: "", rating: 4.0, ratings_total: 27 },
+    { name: "はな整骨院 北区", address: "大阪府大阪市北区菅原町9-5", phone: "06-5678-0020", website: "", rating: 4.5, ratings_total: 44 },
   ],
 };
 
 const AREA_PRESETS = [
-  "å¤§éªå¸ååº", "å¤§éªå¸ä¸­å¤®åº", "å¤§éªå¸å¤©çå¯ºåº", "å¤§éªå¸æµªéåº",
-  "æ±äº¬é½æ¸è°·åº", "æ±äº¬é½æ°å®¿åº", "æ±äº¬é½æ¸¯åº", "æ±äº¬é½ä¸ç°è°·åº",
-  "åå¤å±å¸ä¸­åº", "ç¦å²¡å¸ä¸­å¤®åº", "æ­å¹å¸ä¸­å¤®åº", "äº¬é½å¸ä¸­äº¬åº",
+  "大阪市北区", "大阪市中央区", "大阪市天王寺区", "大阪市浪速区",
+  "東京都渋谷区", "東京都新宿区", "東京都港区", "東京都世田谷区",
+  "名古屋市中区", "福岡市中央区", "札幌市中央区", "京都市中京区",
 ];
 
 /* ============================================
    Utility Functions
    ============================================ */
 function determinePriority(website, ratingsTotal) {
-  if (!website) return ratingsTotal <= 50 ? "æé«" : "é«";
-  return "ä¸­";
+  if (!website) return ratingsTotal <= 50 ? "最高" : "高";
+  return "中";
 }
-function prioritySortKey(p) { return {"æé«":0,"é«":1,"ä¸­":2}[p]??99; }
+function prioritySortKey(p) { return {"最高":0,"高":1,"中":2}[p]??99; }
 
 function toCSVString(records) {
   const BOM = "\uFEFF";
-  const headers = ["åºå","æ¥­ç¨®","ä½æ","é»è©²çªå·","HP URL","HPæç¡","Googleè©ä¾¡","å£ã³ãæ°","åªååº¦","åéæ¥æ"];
+  const headers = ["店名","業種","住所","電話番号","HP URL","HP有無","Google評価","口コミ数","優先度","収集日時"];
   const rows = records.map(r =>
     headers.map(h => {
       const v = String(r[h]??"");
@@ -184,10 +184,10 @@ function renderStars(rating) {
 }
 
 function catEmoji(cat) {
-  if (cat === "é£²é£åº") return "ð½ï¸";
-  if (cat === "ç¾å®¹å®¤") return "âï¸";
-  if (cat === "æ´éª¨é¢") return "ð";
-  return "ð";
+  if (cat === "飲食店") return "🍽️";
+  if (cat === "美容室") return "✂️";
+  if (cat === "整骨院") return "💆";
+  return "📍";
 }
 
 /* ============================================
@@ -195,7 +195,7 @@ function catEmoji(cat) {
    ============================================ */
 function App() {
   const [area, setArea] = useState("");
-  const [category, setCategory] = useState("é£²é£åº");
+  const [category, setCategory] = useState("飲食店");
   const [results, setResults] = useState([]);
   const [isRunning, setIsRunning] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -220,18 +220,18 @@ function App() {
     if (!area.trim()) return;
     setIsRunning(true); setResults([]); setProgress(0); setLogs([]); setFilterPriority("all");
 
-    addLog("ð åééå§: " + area + " Ã " + category);
-    addLog("ð¡ Text Search API å¼ã³åºãä¸­...");
+    addLog("🚀 収集開始: " + area + " × " + category);
+    addLog("📡 Text Search API 呼び出し中...");
     await new Promise(r => setTimeout(r, 700));
 
-    const stores = DEMO_DATA[category] || DEMO_DATA["é£²é£åº"];
+    const stores = DEMO_DATA[category] || DEMO_DATA["飲食店"];
     const adjusted = stores.map(s => ({
-      ...s, address: area.includes("å¤§éªå¸ååº") ? s.address : s.address.replace("å¤§éªåºå¤§éªå¸ååº", area)
+      ...s, address: area.includes("大阪市北区") ? s.address : s.address.replace("大阪府大阪市北区", area)
     }));
 
     setTotalItems(adjusted.length);
     setUsage(prev => ({ monthly: prev.monthly + 1, daily: prev.daily + 1 }));
-    addLog("â " + adjusted.length + " ä»¶ã®åºèãæ¤åº");
+    addLog("✅ " + adjusted.length + " 件の店舗を検出");
 
     const collected = [];
     const now = new Date().toLocaleString("ja-JP");
@@ -242,40 +242,40 @@ function App() {
       setCurrentStore(s.name);
       const priority = determinePriority(s.website, s.ratings_total);
       collected.push({
-        "åºå": s.name, "æ¥­ç¨®": category, "ä½æ": s.address, "é»è©±çªå·": s.phone,
-        "HP URL": s.website, "HPæç¡": s.website ? "ãã" : "ãªã",
-        "Googleè©ä¾¡": s.rating, "å£ã³ãæ°": s.ratings_total, "åªååº¦": priority, "åéæ¥æ": now,
+        "店名": s.name, "業種": category, "住所": s.address, "電話番号": s.phone,
+        "HP URL": s.website, "HP有無": s.website ? "あり" : "なし",
+        "Google評価": s.rating, "口コミ数": s.ratings_total, "優先度": priority, "収集日時": now,
       });
       setUsage(prev => ({ monthly: prev.monthly + 1, daily: prev.daily + 1 }));
-      addLog("[" + (i+1) + "/" + adjusted.length + "] " + s.name + " â " + priority);
+      addLog("[" + (i+1) + "/" + adjusted.length + "] " + s.name + " → " + priority);
       await new Promise(r => setTimeout(r, 100));
     }
 
-    collected.sort((a,b) => prioritySortKey(a["åªååº¦"]) - prioritySortKey(b["åªååº¦"]));
+    collected.sort((a,b) => prioritySortKey(a["優先度"]) - prioritySortKey(b["優先度"]));
     setResults(collected); setCurrentStore("");
 
-    const saikou = collected.filter(r => r["åªååº¦"]==="æé«").length;
-    const kou = collected.filter(r => r["åªååº¦"]==="é«").length;
-    const chuu = collected.filter(r => r["åªååº¦"]==="ä¸­").length;
-    addLog("ð åéå®äºï¼ æé«=" + saikou + " / é«=" + kou + " / ä¸­=" + chuu);
+    const saikou = collected.filter(r => r["優先度"]==="最高").length;
+    const kou = collected.filter(r => r["優先度"]==="高").length;
+    const chuu = collected.filter(r => r["優先度"]==="中").length;
+    addLog("🎉 収集完了！ 最高=" + saikou + " / 高=" + kou + " / 中=" + chuu);
 
     setHistory(prev => [{ area, category, count: collected.length, saikou, kou, chuu, date: now }, ...prev.slice(0, 9)]);
     setIsRunning(false);
   }, [area, category, addLog]);
 
   const downloadCSV = useCallback(() => {
-    const filtered = filterPriority === "all" ? results : results.filter(r => r["åªååº¦"] === filterPriority);
+    const filtered = filterPriority === "all" ? results : results.filter(r => r["優先度"] === filterPriority);
     const csv = toCSVString(filtered);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url;
     a.download = new Date().toISOString().slice(0,10) + "_" + area + "_" + category + ".csv";
     a.click(); URL.revokeObjectURL(url);
-    addLog("ð¥ CSV ãã¦ã³ã­ã¼ã: " + filtered.length + "ä»¶");
+    addLog("📥 CSV ダウンロード: " + filtered.length + "件");
   }, [results, filterPriority, area, category, addLog]);
 
-  const filtered = filterPriority === "all" ? results : results.filter(r => r["åªååº¦"] === filterPriority);
-  const cnt = { "æé«": results.filter(r=>r["åªååº¦"]==="æé«").length, "é«": results.filter(r=>r["åªååº¦"]==="é«").length, "ä¸­": results.filter(r=>r["åªååº¦"]==="ä¸­").length };
+  const filtered = filterPriority === "all" ? results : results.filter(r => r["優先度"] === filterPriority);
+  const cnt = { "最高": results.filter(r=>r["優先度"]==="最高").length, "高": results.filter(r=>r["優先度"]==="高").length, "中": results.filter(r=>r["優先度"]==="中").length };
   const usagePct = Math.min(100, (usage.monthly / 3000) * 100);
 
   return (
@@ -289,13 +289,13 @@ function App() {
             </div>
             <div>
               <h1 style={{fontSize:18,fontWeight:800,color:"#1e293b",lineHeight:1.2}}>MAP Lead Collector</h1>
-              <p style={{fontSize:11,color:"#94a3b8"}}>Googleããã HPå¶ä½å¶æ¥­ãªã¹ãèªååé</p>
+              <p style={{fontSize:11,color:"#94a3b8"}}>Googleマップ HP制作営業リスト自動収集</p>
             </div>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:"12px",flexWrap:"wrap"}}>
             <div style={{background:"#f1f5f9",borderRadius:10,padding:"6px 14px",display:"flex",alignItems:"center",gap:8,fontSize:12}}>
               <BarChartIcon size={13} cls="text-gray-400" />
-              <span style={{color:"#64748b"}}>æé</span>
+              <span style={{color:"#64748b"}}>月間</span>
               <span style={{fontWeight:700,color:"#334155"}}>{usage.monthly.toLocaleString()}</span>
               <span style={{color:"#94a3b8"}}>/ 3,000</span>
               <div style={{width:50,height:4,background:"#e2e8f0",borderRadius:2,overflow:"hidden"}}>
@@ -304,7 +304,7 @@ function App() {
             </div>
             <div style={{background:"#f1f5f9",borderRadius:10,padding:"6px 14px",display:"flex",alignItems:"center",gap:8,fontSize:12}}>
               <ClockIcon size={13} cls="text-gray-400" />
-              <span style={{color:"#64748b"}}>æ¬æ¥</span>
+              <span style={{color:"#64748b"}}>本日</span>
               <span style={{fontWeight:700,color:"#334155"}}>{usage.daily}</span>
               <span style={{color:"#94a3b8"}}>/ 100</span>
             </div>
@@ -317,10 +317,10 @@ function App() {
         <div className="slide-up" style={{background:"#fff",borderRadius:20,boxShadow:"0 4px 24px rgba(0,0,0,0.06)",border:"1px solid #e2e8f0",padding:24,marginBottom:24}}>
           <div style={{display:"flex",flexWrap:"wrap",gap:16,alignItems:"flex-end"}}>
             <div style={{flex:"1 1 260px",position:"relative"}}>
-              <label style={{display:"block",fontSize:11,fontWeight:700,color:"#64748b",marginBottom:6,textTransform:"uppercase",letterSpacing:"0.05em"}}>ã¨ãªã¢</label>
+              <label style={{display:"block",fontSize:11,fontWeight:700,color:"#64748b",marginBottom:6,textTransform:"uppercase",letterSpacing:"0.05em"}}>エリア</label>
               <div style={{position:"relative"}}>
                 <div style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)"}}><MapPinIcon size={16} cls="text-gray-400" /></div>
-                <input type="text" placeholder="ä¾: å¤§éªå¸ååº" value={area}
+                <input type="text" placeholder="例: 大阪市北区" value={area}
                   onChange={e=>setArea(e.target.value)}
                   onFocus={()=>setShowAreaDropdown(true)}
                   onBlur={()=>setTimeout(()=>setShowAreaDropdown(false),200)}
@@ -343,12 +343,12 @@ function App() {
             </div>
 
             <div style={{width:200}}>
-              <label style={{display:"block",fontSize:11,fontWeight:700,color:"#64748b",marginBottom:6,textTransform:"uppercase",letterSpacing:"0.05em"}}>æ¥­ç¨®</label>
+              <label style={{display:"block",fontSize:11,fontWeight:700,color:"#64748b",marginBottom:6,textTransform:"uppercase",letterSpacing:"0.05em"}}>業種</label>
               <select value={category} onChange={e=>setCategory(e.target.value)} disabled={isRunning}
                 style={{width:"100%",padding:"10px 36px 10px 16px",borderRadius:14,border:"1px solid #e2e8f0",background:"#f8fafc",fontSize:14,appearance:"none",outline:"none",cursor:"pointer"}}>
-                <option value="é£²é£åº">ð½ï¸ é£²é£åº</option>
-                <option value="ç¾å®¹å®¤">âï¸ ç¾å®¹å®¤</option>
-                <option value="æ´éª¨é¢">ð æ´éª¨é¢</option>
+                <option value="飲食店">🍽️ 飲食店</option>
+                <option value="美容室">✂️ 美容室</option>
+                <option value="整骨院">💆 整骨院</option>
               </select>
             </div>
 
@@ -358,9 +358,9 @@ function App() {
                 display:"flex",alignItems:"center",gap:8,color:isRunning||!area.trim()?"#94a3b8":"#fff",
                 background:isRunning||!area.trim()?"#e2e8f0":undefined,transition:"all 0.2s",whiteSpace:"nowrap"}}>
               {isRunning ? (
-                <><svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24"><circle opacity=".25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path opacity=".75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> åéä¸­...</>
+                <><svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24"><circle opacity=".25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path opacity=".75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> 収集中...</>
               ) : (
-                <><SearchIcon size={16} /> åééå§</>
+                <><SearchIcon size={16} /> 収集開始</>
               )}
             </button>
           </div>
@@ -388,23 +388,23 @@ function App() {
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(140px, 1fr))",gap:12,marginBottom:20}}>
               <div style={{background:"#fff",borderRadius:16,border:"1px solid #e2e8f0",padding:20,textAlign:"center",boxShadow:"0 2px 8px rgba(0,0,0,0.04)"}}>
                 <div style={{fontSize:32,fontWeight:900,color:"#334155"}}>{results.length}</div>
-                <div style={{fontSize:11,color:"#94a3b8",marginTop:2}}>ç·ä»¶æ°</div>
+                <div style={{fontSize:11,color:"#94a3b8",marginTop:2}}>総件数</div>
               </div>
-              {[["æé«","#dc2626","card-saikou","ring-active-saikou"],["é«","#f97316","card-kou","ring-active-kou"],["ä¸­","#0ea5e9","card-chuu","ring-active-chuu"]].map(([p,color,cardCls,ringCls])=>(
+              {[["最高","#dc2626","card-saikou","ring-active-saikou"],["高","#f97316","card-kou","ring-active-kou"],["中","#0ea5e9","card-chuu","ring-active-chuu"]].map(([p,color,cardCls,ringCls])=>(
                 <button key={p} onClick={()=>setFilterPriority(prev=>prev===p?"all":p)}
                   className={cardCls + (filterPriority===p?" "+ringCls:"")}
                   style={{background:"#fff",borderRadius:16,border:"1px solid #e2e8f0",padding:20,textAlign:"center",cursor:"pointer",transition:"all 0.2s",boxShadow:"0 2px 8px rgba(0,0,0,0.04)"}}>
                   <div style={{fontSize:32,fontWeight:900,color}}>{cnt[p]}</div>
                   <div style={{fontSize:11,color:"#94a3b8",marginTop:2,display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
                     <span style={{width:8,height:8,borderRadius:999,background:color,display:"inline-block"}}/>
-                    åªååº¦ {p}
+                    優先度 {p}
                   </div>
                 </button>
               ))}
               <button onClick={downloadCSV} className="btn-csv"
                 style={{borderRadius:16,padding:20,textAlign:"center",cursor:"pointer",color:"#fff",border:"none",transition:"all 0.2s",boxShadow:"0 2px 8px rgba(0,0,0,0.04)"}}>
                 <DownloadIcon size={28} cls="mx-auto" />
-                <div style={{fontSize:12,fontWeight:700,marginTop:6}}>CSVåºå</div>
+                <div style={{fontSize:12,fontWeight:700,marginTop:6}}>CSV出力</div>
               </button>
             </div>
 
@@ -412,9 +412,9 @@ function App() {
             {filterPriority !== "all" && (
               <div className="fade-in" style={{display:"flex",alignItems:"center",gap:8,marginBottom:12,fontSize:12,color:"#64748b"}}>
                 <FilterIcon cls="text-gray-400" />
-                ãã£ã«ã¿ã¼: åªååº¦ã{filterPriority}ãã®ã¿è¡¨ç¤ºä¸­
+                フィルター: 優先度「{filterPriority}」のみ表示中
                 <button onClick={()=>setFilterPriority("all")} style={{color:"#3b82f6",background:"none",border:"none",cursor:"pointer",fontSize:12,display:"flex",alignItems:"center",gap:2}}>
-                  <XIcon size={12} /> è§£é¤
+                  <XIcon size={12} /> 解除
                 </button>
               </div>
             )}
@@ -425,47 +425,47 @@ function App() {
                 <table style={{width:"100%",fontSize:13,borderCollapse:"collapse"}}>
                   <thead>
                     <tr style={{background:"#f8fafc",borderBottom:"1px solid #e2e8f0"}}>
-                      {["#","åºå","ä½æ","é»è©±","HP","è©ä¾¡","å£ã³ã","åªååº¦"].map(h=>(
-                        <th key={h} style={{textAlign:["#","åºå","ä½æ","é»è©±"].includes(h)?"left":"center",padding:"12px 16px",fontSize:10,fontWeight:700,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.05em"}}>{h}</th>
+                      {["#","店名","住所","電話","HP","評価","口コミ","優先度"].map(h=>(
+                        <th key={h} style={{textAlign:["#","店名","住所","電話"].includes(h)?"left":"center",padding:"12px 16px",fontSize:10,fontWeight:700,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.05em"}}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {filtered.map((r,i) => {
-                      const isSaikou = r["åªååº¦"]==="æé«";
+                      const isSaikou = r["優先度"]==="最高";
                       return (
                         <tr key={i} className="table-row" style={{borderBottom:"1px solid #f1f5f9",background:isSaikou?"#fef2f2":"transparent",transition:"background 0.15s"}}>
                           <td style={{padding:"10px 16px",color:"#94a3b8",fontSize:11}}>{i+1}</td>
                           <td style={{padding:"10px 16px"}}>
                             <span style={{display:"flex",alignItems:"center",gap:8}}>
-                              <span>{catEmoji(r["æ¥­ç¨®"])}</span>
-                              <span style={{fontWeight:600,color:"#1e293b"}}>{r["åºå"]}</span>
+                              <span>{catEmoji(r["業種"])}</span>
+                              <span style={{fontWeight:600,color:"#1e293b"}}>{r["店名"]}</span>
                             </span>
                           </td>
-                          <td style={{padding:"10px 16px",color:"#64748b",fontSize:12,maxWidth:260,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r["ä½æ"]}</td>
+                          <td style={{padding:"10px 16px",color:"#64748b",fontSize:12,maxWidth:260,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r["住所"]}</td>
                           <td style={{padding:"10px 16px"}}>
-                            {r["é»è©±çªå·"] ? (
-                              <span style={{display:"flex",alignItems:"center",gap:4,fontSize:12,color:"#475569"}}><PhoneIcon size={11} cls="text-gray-400" />{r["é»è©±çªå·"]}</span>
+                            {r["電話番号"] ? (
+                              <span style={{display:"flex",alignItems:"center",gap:4,fontSize:12,color:"#475569"}}><PhoneIcon size={11} cls="text-gray-400" />{r["電話番号"]}</span>
                             ) : <span style={{color:"#cbd5e1",fontSize:12}}>-</span>}
                           </td>
                           <td style={{padding:"10px 16px",textAlign:"center"}}>
                             {r["HP URL"] ? (
                               <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"2px 10px",borderRadius:999,background:"#f0f9ff",color:"#0284c7",fontSize:11,fontWeight:500}}>
-                                <GlobeIcon size={11} />ãã
+                                <GlobeIcon size={11} />あり
                               </span>
                             ) : (
                               <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"2px 10px",borderRadius:999,background:"#fef2f2",color:"#ef4444",fontSize:11,fontWeight:700}}>
-                                <AlertIcon size={11} />ãªã
+                                <AlertIcon size={11} />なし
                               </span>
                             )}
                           </td>
-                          <td style={{padding:"10px 16px",textAlign:"center"}}>{renderStars(r["Googleè©ä¾¡"])}</td>
-                          <td style={{padding:"10px 16px",textAlign:"center",fontSize:12,color:"#475569"}} className="font-mono">{r["å£ã³ãæ°"]}</td>
+                          <td style={{padding:"10px 16px",textAlign:"center"}}>{renderStars(r["Google評価"])}</td>
+                          <td style={{padding:"10px 16px",textAlign:"center",fontSize:12,color:"#475569"}} className="font-mono">{r["口コミ数"]}</td>
                           <td style={{padding:"10px 16px",textAlign:"center"}}>
-                            <span className={"badge-"+(r["åªååº¦"]==="æé«"?"saikou":r["åªååº¦"]==="é«"?"kou":"chuu")}
+                            <span className={"badge-"+(r["優先度"]==="最高"?"saikou":r["優先度"]==="高"?"kou":"chuu")}
                               style={{display:"inline-flex",alignItems:"center",gap:3,padding:"4px 12px",borderRadius:999,color:"#fff",fontSize:11,fontWeight:700}}>
-                              {r["åªååº¦"]==="æé«" && <ZapIcon size={11} />}
-                              {r["åªååº¦"]}
+                              {r["優先度"]==="最高" && <ZapIcon size={11} />}
+                              {r["優先度"]}
                             </span>
                           </td>
                         </tr>
@@ -484,17 +484,17 @@ function App() {
           <div style={{background:"#fff",borderRadius:20,boxShadow:"0 4px 24px rgba(0,0,0,0.06)",border:"1px solid #e2e8f0",overflow:"hidden"}}>
             <div style={{padding:"10px 20px",background:"#1e293b",display:"flex",alignItems:"center",gap:8}}>
               <span style={{display:"flex",gap:6}}><span style={{width:10,height:10,borderRadius:999,background:"#ef4444"}}/><span style={{width:10,height:10,borderRadius:999,background:"#eab308"}}/><span style={{width:10,height:10,borderRadius:999,background:"#22c55e"}}/></span>
-              <span className="font-mono" style={{fontSize:11,color:"#64748b",marginLeft:8}}>å®è¡ã­ã°</span>
+              <span className="font-mono" style={{fontSize:11,color:"#64748b",marginLeft:8}}>実行ログ</span>
             </div>
             <div ref={logRef} className="terminal" style={{padding:16,maxHeight:260,overflowY:"auto"}}>
               {logs.length === 0 ? (
                 <p className="font-mono" style={{fontSize:12,color:"#475569"}}>
-                  ã¨ãªã¢ã¨æ¥­ç¨®ãé¸ãã§ãåééå§ããæ¼ãã¦ãã ãã...
+                  エリアと業種を選んで「収集開始」を押してください...
                 </p>
               ) : logs.map((l,i) => (
                 <div key={i} className="font-mono" style={{fontSize:11,marginBottom:2}}>
                   <span style={{color:"#64748b"}}>[{l.time}]</span>{" "}
-                  <span style={{color:l.msg.includes("å®äº")||l.msg.includes("ð")?"#4ade80":l.msg.includes("æé«")?"#f87171":l.msg.includes("é«")?"#fb923c":"#cbd5e1"}}>{l.msg}</span>
+                  <span style={{color:l.msg.includes("完了")||l.msg.includes("🎉")?"#4ade80":l.msg.includes("最高")?"#f87171":l.msg.includes("高")?"#fb923c":"#cbd5e1"}}>{l.msg}</span>
                 </div>
               ))}
             </div>
@@ -504,21 +504,21 @@ function App() {
           <div style={{background:"#fff",borderRadius:20,boxShadow:"0 4px 24px rgba(0,0,0,0.06)",border:"1px solid #e2e8f0",overflow:"hidden"}}>
             <div style={{padding:"14px 20px",borderBottom:"1px solid #f1f5f9"}}>
               <h3 style={{fontSize:14,fontWeight:700,color:"#334155",display:"flex",alignItems:"center",gap:8}}>
-                <ClockIcon size={14} cls="text-gray-400" /> åéå±¥æ­´
+                <ClockIcon size={14} cls="text-gray-400" /> 収集履歴
               </h3>
             </div>
             <div style={{padding:16,maxHeight:260,overflowY:"auto"}}>
               {history.length === 0 ? (
-                <p style={{fontSize:12,color:"#94a3b8",textAlign:"center",padding:24}}>ã¾ã å±¥æ­´ãããã¾ãã</p>
+                <p style={{fontSize:12,color:"#94a3b8",textAlign:"center",padding:24}}>まだ履歴がありません</p>
               ) : history.map((h,i) => (
                 <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:"#f8fafc",borderRadius:12,padding:"10px 16px",marginBottom:8}}>
                   <div>
                     <span style={{fontSize:13,fontWeight:600,color:"#334155"}}>{h.area}</span>
-                    <span style={{margin:"0 8px",color:"#cbd5e1"}}>Ã</span>
+                    <span style={{margin:"0 8px",color:"#cbd5e1"}}>×</span>
                     <span style={{fontSize:13,color:"#64748b"}}>{catEmoji(h.category)} {h.category}</span>
                   </div>
                   <div style={{display:"flex",alignItems:"center",gap:10}}>
-                    <span className="font-mono" style={{fontSize:11,color:"#64748b"}}>{h.count}ä»¶</span>
+                    <span className="font-mono" style={{fontSize:11,color:"#64748b"}}>{h.count}件</span>
                     <div style={{display:"flex",gap:4}}>
                       <span style={{padding:"2px 6px",fontSize:10,borderRadius:6,background:"#fee2e2",color:"#dc2626",fontWeight:700}}>{h.saikou}</span>
                       <span style={{padding:"2px 6px",fontSize:10,borderRadius:6,background:"#ffedd5",color:"#ea580c",fontWeight:700}}>{h.kou}</span>
@@ -534,7 +534,7 @@ function App() {
         {/* Footer */}
         <div style={{marginTop:40,textAlign:"center",fontSize:11,color:"#94a3b8",paddingBottom:24}}>
           <p style={{fontWeight:600}}>MAP Lead Collector</p>
-          <p style={{marginTop:4}}>ãã¢ã¢ã¼ãåä½ä¸­ ã» æ¬çªå©ç¨æã¯ config.py ã« APIã­ã¼ãè¨­å®</p>
+          <p style={{marginTop:4}}>デモモード動作中 ・ 本番利用時は config.py に APIキーを設定</p>
         </div>
       </div>
     </div>
