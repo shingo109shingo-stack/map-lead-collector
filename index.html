@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAP Lead Collector - Googleãããå¶æ¥­ãªã¹ãèªååé</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>ð</text></svg>">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+  * { font-family: 'Inter', -apple-system, sans-serif; }
+  .font-mono { font-family: 'JetBrains Mono', monospace; }
+  .animate-spin { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .6; } }
+  .fade-in { animation: fadeIn 0.3s ease-out forwards; }
+  .slide-up { animation: slideUp 0.5s ease-out forwards; }
+  .pulse-anim { animation: pulse 1.5s ease-in-out infinite; }
+  .progress-bar { transition: width 0.3s ease; }
+  .table-row:hover { background: #f8fafc; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  body { background: linear-gradient(135deg, #f8fafc 0%, #ffffff 40%, #eff6ff 100%); min-height: 100vh; }
+  .glass { background: rgba(255,255,255,0.85); backdrop-filter: blur(10px); }
+  .badge-saikou { background: linear-gradient(135deg, #dc2626, #ef4444); }
+  .badge-kou { background: linear-gradient(135deg, #ea580c, #f97316); }
+  .badge-chuu { background: linear-gradient(135deg, #0284c7, #0ea5e9); }
+  .btn-primary { background: linear-gradient(135deg, #2563eb, #4f46e5); }
+  .btn-primary:hover { background: linear-gradient(135deg, #1d4ed8, #4338ca); box-shadow: 0 10px 25px -5px rgba(37,99,235,0.4); }
+  .btn-csv { background: linear-gradient(135deg, #059669, #10b981); }
+  .btn-csv:hover { box-shadow: 0 10px 25px -5px rgba(5,150,105,0.4); }
+  .card-saikou { border-left: 4px solid #dc2626; }
+  .card-kou { border-left: 4px solid #f97316; }
+  .card-chuu { border-left: 4px solid #0ea5e9; }
+  .terminal { background: #0f172a; }
+  .ring-active-saikou { box-shadow: 0 0 0 2px #dc2626; }
+  .ring-active-kou { box-shadow: 0 0 0 2px #f97316; }
+  .ring-active-chuu { box-shadow: 0 0 0 2px #0ea5e9; }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 6l3.5 4 3.5-4z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useCallback, useRef, useEffect } = React;
+
+/* ============================================
+   Demo Data
+   ============================================ */
+const DEMO_DATA = {
+  "é£²é£åº": [
+    { name: "ç­ç«ç¼è çèµ", address: "å¤§éªåºå¤§éªå¸ååºæ¢ç°1-2-3", phone: "06-1234-5678", website: "", rating: 4.2, ratings_total: 32 },
+    { name: "éººå± ä¸å¿", address: "å¤§éªåºå¤§éªå¸ååºæ½æ ¹å´2-5-10", phone: "06-2345-6789", website: "", rating: 3.8, ratings_total: 128 },
+    { name: "å¯¿å¸å²ç¹ ãªããã", address: "å¤§éªåºå¤§éªå¸ååºå å³¶1-3-7", phone: "06-3456-7890", website: "https://nakamura-sushi.example.com", rating: 4.5, ratings_total: 245 },
+    { name: "å±éå± ã¼ã¡ã¼ã¡", address: "å¤§éªåºå¤§éªå¸ååºå¤©ç¥æ©3-8-15", phone: "06-4567-8901", website: "", rating: 3.5, ratings_total: 18 },
+    { name: "ã«ãã§ ã¢ã¼ãã³ã°", address: "å¤§éªåºå¤§éªå¸ååºä¸­å´è¥¿2-1-4", phone: "06-5678-9012", website: "", rating: 4.0, ratings_total: 45 },
+    { name: "ç¼é³¥ ã¨ãã¾ã", address: "å¤§éªåºå¤§éªå¸ååºé»å´çº5-12", phone: "06-6789-0123", website: "https://torimaru.example.com", rating: 4.3, ratings_total: 310 },
+    { name: "ä¸­è¯æç é¾é³³", address: "å¤§éªåºå¤§éªå¸ååºè¥¿å¤©æº4-6-2", phone: "06-7890-1234", website: "", rating: 3.9, ratings_total: 67 },
+    { name: "ãå¥½ã¿ç¼ã åæ¿", address: "å¤§éªåºå¤§éªå¸ååºè§ç°çº1-10", phone: "06-8901-2345", website: "https://senba-okonomiyaki.example.com", rating: 4.1, ratings_total: 520 },
+    { name: "ãã©ã è®å²äº­", address: "å¤§éªåºå¤§éªå¸ååºå¤ªèå¯ºçº3-9", phone: "06-9012-3456", website: "", rating: 4.4, ratings_total: 12 },
+    { name: "æ´é£ ã­ããã³ABC", address: "å¤§éªåºå¤§éªå¸ååºèç°2-7-18", phone: "06-0123-4567", website: "", rating: 3.7, ratings_total: 89 },
+    { name: "ä¸²ã«ã ã ãã¾ åæ°å°åº", address: "å¤§éªåºå¤§éªå¸ååºå å³¶æµ1-4-16", phone: "06-1111-2222", website: "https://daruma-kushikatsu.example.com", rating: 4.0, ratings_total: 890 },
+    { name: "ããç¼ã å¤§éªé­", address: "å¤§éªåºå¤§éªå¸ååºæµ®ç°2-3-11", phone: "06-3333-4444", website: "", rating: 3.6, ratings_total: 25 },
+    { name: "éå½æç ã½ã¦ã«å®¶", address: "å¤§éªåºå¤§éªå¸ååºè±å´3-15-5", phone: "06-5555-6666", website: "", rating: 4.1, ratings_total: 41 },
+    { name: "å¤©ã·ã æ°å®¿", address: "å¤§éªåºå¤§éªå¸ååºé¶´éçº4-2", phone: "06-7777-8888", website: "", rating: 4.6, ratings_total: 156 },
+    { name: "ã©ã¼ã¡ã³ æ¥µ", address: "å¤§éªåºå¤§éªå¸ååºä¸æ­³çº3-20", phone: "", website: "", rating: 3.4, ratings_total: 8 },
+    { name: "ã¤ã¿ãªã¢ã³ ãã©ãããªã¢", address: "å¤§éªåºå¤§éªå¸ååºç´æ¢çº6-14", phone: "06-2222-3333", website: "https://trattoria-osaka.example.com", rating: 4.3, ratings_total: 178 },
+    { name: "éæ¿ç¼ã å ", address: "å¤§éªåºå¤§éªå¸ååºå å±±çº1-5", phone: "06-4444-5555", website: "", rating: 4.7, ratings_total: 34 },
+    { name: "ã«ã¬ã¼ ã¹ãã¤ã¹ã­ã¼ã", address: "å¤§éªåºå¤§éªå¸ååºæ«åºçº3-8", phone: "06-6666-7777", website: "", rating: 4.0, ratings_total: 52 },
+    { name: "ã¹ãã¼ã­ãã¦ã¹ ç¥æ¸äº­", address: "å¤§éªåºå¤§éªå¸ååºè¶å±çº12-6", phone: "06-8888-9999", website: "https://kobetei.example.com", rating: 4.4, ratings_total: 430 },
+    { name: "å±éå± ã®ãã¹ãæ¨ªä¸", address: "å¤§éªåºå¤§éªå¸ååºæ± ç°çº9-3", phone: "06-0000-1111", website: "", rating: 3.3, ratings_total: 15 },
+  ],
+  "ç¾å®¹å®¤": [
+    { name: "hair salon BLOOM", address: "å¤§éªåºå¤§éªå¸ååºè¶å±çº6-20", phone: "06-1234-0001", website: "", rating: 4.5, ratings_total: 28 },
+    { name: "ç¾å®¹å®¤ LUXE", address: "å¤§éªåºå¤§éªå¸ååºæ¢ç°3-1-15", phone: "06-1234-0002", website: "https://luxe-hair.example.com", rating: 4.2, ratings_total: 195 },
+    { name: "ã«ãããã¦ã¹ tanaka", address: "å¤§éªåºå¤§éªå¸ååºå¤©ç¥æ©5-7-3", phone: "06-1234-0003", website: "", rating: 3.9, ratings_total: 42 },
+    { name: "hair make RISE", address: "å¤§éªåºå¤§éªå¸ååºä¸­å´1-9-21", phone: "06-1234-0004", website: "", rating: 4.0, ratings_total: 11 },
+    { name: "ãã¢ã¼ãµã­ã³ Aki", address: "å¤§éªåºå¤§éªå¸ååºè±å´5-4-12", phone: "06-1234-0005", website: "", rating: 4.3, ratings_total: 76 },
+    { name: "HAIR & MAKE EARTH æ¢ç°åº", address: "å¤§éªåºå¤§éªå¸ååºè§ç°çº5-1", phone: "06-1234-0006", website: "https://earth-hair.example.com", rating: 3.8, ratings_total: 340 },
+    { name: "ç¾å®¹å®¤ nico", address: "å¤§éªåºå¤§éªå¸ååºæµ®è±çº8-14", phone: "06-1234-0007", website: "", rating: 4.6, ratings_total: 19 },
+    { name: "salon de coupe", address: "å¤§éªåºå¤§éªå¸ååºå å³¶2-1-30", phone: "06-1234-0008", website: "", rating: 4.1, ratings_total: 55 },
+    { name: "HAIR COLOR CAFE", address: "å¤§éªåºå¤§éªå¸ååºæ½æ ¹å´æ°å°1-3", phone: "06-1234-0009", website: "https://color-cafe.example.com", rating: 4.4, ratings_total: 210 },
+    { name: "çå®¹å®¤ BarBer KING", address: "å¤§éªåºå¤§éªå¸ååºå¤©æº3-4-5", phone: "06-1234-0010", website: "", rating: 3.7, ratings_total: 33 },
+    { name: "total beauty MUSE", address: "å¤§éªåºå¤§éªå¸ååºè¥¿å¤©æº5-1-9", phone: "06-1234-0011", website: "", rating: 4.8, ratings_total: 7 },
+    { name: "hair studio VAIN", address: "å¤§éªåºå¤§éªå¸ååºåæçº6-28", phone: "06-1234-0012", website: "", rating: 4.0, ratings_total: 48 },
+    { name: "ç¾å®¹å®¤ Cocoro", address: "å¤§éªåºå¤§éªå¸ååºèè¿çº10-1", phone: "06-1234-0013", website: "", rating: 4.2, ratings_total: 22 },
+    { name: "AVANCE hair design", address: "å¤§éªåºå¤§éªå¸ååºé¶´éçº1-9", phone: "06-1234-0014", website: "https://avance-hair.example.com", rating: 4.5, ratings_total: 165 },
+    { name: "cut & perm ããã", address: "å¤§éªåºå¤§éªå¸ååºåå¿2-11-6", phone: "06-1234-0015", website: "", rating: 3.5, ratings_total: 14 },
+    { name: "ZEST hair salon", address: "å¤§éªåºå¤§éªå¸ååºæ¬åºæ±1-20", phone: "06-1234-0016", website: "", rating: 4.3, ratings_total: 38 },
+    { name: "hair resort Lino", address: "å¤§éªåºå¤§éªå¸ååºæ±å¤©æº2-8", phone: "06-1234-0017", website: "", rating: 4.1, ratings_total: 61 },
+    { name: "ç¾å®¹å®¤ Calm", address: "å¤§éªåºå¤§éªå¸ååºå±±å´çº1-15", phone: "06-1234-0018", website: "https://calm-beauty.example.com", rating: 4.0, ratings_total: 88 },
+    { name: "ABBEY hair æ¢ç°åº", address: "å¤§éªåºå¤§éªå¸ååºèç°1-12-7", phone: "06-1234-0019", website: "https://abbey-hair.example.com", rating: 4.6, ratings_total: 520 },
+    { name: "ãã¢ãµã­ã³çµ", address: "å¤§éªåºå¤§éªå¸ååºä¸åçº4-7", phone: "06-1234-0020", website: "", rating: 4.4, ratings_total: 9 },
+  ],
+  "æ´éª¨é¢": [
+    { name: "æ¢ç°æ´éª¨é¢", address: "å¤§éªåºå¤§éªå¸ååºæ¢ç°2-4-13", phone: "06-5678-0001", website: "", rating: 4.3, ratings_total: 35 },
+    { name: "å¤©å­ã¯ããããæ´éª¨é¢", address: "å¤§éªåºå¤§éªå¸ååºå¤©ç¥æ©6-3-10", phone: "06-5678-0002", website: "https://tenroku-seikotsuin.example.com", rating: 4.1, ratings_total: 128 },
+    { name: "ããã æ´éª¨é¢ ä¸­å´çº", address: "å¤§éªåºå¤§éªå¸ååºä¸­å´è¥¿1-8-24", phone: "06-5678-0003", website: "", rating: 3.9, ratings_total: 18 },
+    { name: "ååºéª¨ç¤ç¯æ­£ã»ã³ã¿ã¼", address: "å¤§éªåºå¤§éªå¸ååºè±å´3-10-2", phone: "06-5678-0004", website: "", rating: 4.5, ratings_total: 47 },
+    { name: "å¤§éªé§åæ´éª¨é¢", address: "å¤§éªåºå¤§éªå¸ååºå å³¶1-5-17", phone: "06-5678-0005", website: "https://ekimae-seikotsuin.example.com", rating: 4.0, ratings_total: 215 },
+    { name: "ã²ããé¼ç¸æ´éª¨é¢", address: "å¤§éªåºå¤§éªå¸ååºæµªè±çº14-33", phone: "06-5678-0006", website: "", rating: 4.7, ratings_total: 12 },
+    { name: "åæ£®çºæ´éª¨é¢", address: "å¤§éªåºå¤§éªå¸ååºåæ£®çº2-1-20", phone: "06-5678-0007", website: "", rating: 3.8, ratings_total: 63 },
+    { name: "ã¹ãã¼ãæ´éª¨é¢ VICTORY", address: "å¤§éªåºå¤§éªå¸ååºè¥¿å¤©æº3-14-6", phone: "06-5678-0008", website: "https://victory-sports.example.com", rating: 4.4, ratings_total: 92 },
+    { name: "ã¾ãããæ´éª¨é¢", address: "å¤§éªåºå¤§éªå¸ååºå¤©æº2-7-14", phone: "06-5678-0009", website: "", rating: 4.2, ratings_total: 29 },
+    { name: "ãããå æ´éª¨é¢ æ¢ç°", address: "å¤§éªåºå¤§éªå¸ååºæ½æ ¹å´2-11-8", phone: "06-5678-0010", website: "", rating: 3.6, ratings_total: 8 },
+    { name: "éª¨ç¤æ´ä½ æ¥½ã", address: "å¤§éªåºå¤§éªå¸ååºå¤ªèå¯ºçº5-15", phone: "06-5678-0011", website: "", rating: 4.0, ratings_total: 41 },
+    { name: "ããããæ´éª¨é¢", address: "å¤§éªåºå¤§éªå¸ååºæ± ç°çº3-1", phone: "06-5678-0012", website: "", rating: 4.6, ratings_total: 22 },
+    { name: "å å³¶ã«ã¤ã­ãã©ã¯ãã£ãã¯", address: "å¤§éªåºå¤§éªå¸ååºå å³¶æµ2-1-29", phone: "06-5678-0013", website: "https://dojima-chiro.example.com", rating: 4.3, ratings_total: 178 },
+    { name: "é·ææ´éª¨é¢", address: "å¤§éªåºå¤§éªå¸ååºé··ææ±2-5-18", phone: "06-5678-0014", website: "", rating: 3.7, ratings_total: 15 },
+    { name: "ããããæ´ä½é¢", address: "å¤§éªåºå¤§éªå¸ååºæ«åºçº1-7", phone: "06-5678-0015", website: "", rating: 4.1, ratings_total: 33 },
+    { name: "æ´éª¨é¢ TSUNAGU", address: "å¤§éªåºå¤§éªå¸ååºé»å´çº12-20", phone: "06-5678-0016", website: "", rating: 4.4, ratings_total: 50 },
+    { name: "æçºé¼ç¸æ´éª¨é¢", address: "å¤§éªåºå¤§éªå¸ååºåæçº7-4", phone: "06-5678-0017", website: "https://ogimachi-hari.example.com", rating: 4.2, ratings_total: 310 },
+    { name: "ã»ã­ã¤ã å¤©æºæ©", address: "å¤§éªåºå¤§éªå¸ååºæ±å¤©æº1-11-13", phone: "06-5678-0018", website: "", rating: 3.9, ratings_total: 6 },
+    { name: "ä¸­æ´¥æ´éª¨é¢", address: "å¤§éªåºå¤§éªå¸ååºä¸­æ´¥1-18-14", phone: "06-5678-0019", website: "", rating: 4.0, ratings_total: 27 },
+    { name: "ã¯ãªæ´éª¨é¢ ååº", address: "å¤§éªåºå¤§éªå¸ååºèåçº9-5", phone: "06-5678-0020", website: "", rating: 4.5, ratings_total: 44 },
+  ],
+};
+
+const AREA_PRESETS = [
+  "å¤§éªå¸ååº", "å¤§éªå¸ä¸­å¤®åº", "å¤§éªå¸å¤©çå¯ºåº", "å¤§éªå¸æµªéåº",
+  "æ±äº¬é½æ¸è°·åº", "æ±äº¬é½æ°å®¿åº", "æ±äº¬é½æ¸¯åº", "æ±äº¬é½ä¸ç°è°·åº",
+  "åå¤å±å¸ä¸­åº", "ç¦å²¡å¸ä¸­å¤®åº", "æ­å¹å¸ä¸­å¤®åº", "äº¬é½å¸ä¸­äº¬åº",
+];
+
+/* ============================================
+   Utility Functions
+   ============================================ */
+function determinePriority(website, ratingsTotal) {
+  if (!website) return ratingsTotal <= 50 ? "æé«" : "é«";
+  return "ä¸­";
+}
+function prioritySortKey(p) { return {"æé«":0,"é«":1,"ä¸­":2}[p]??99; }
+
+function toCSVString(records) {
+  const BOM = "\uFEFF";
+  const headers = ["åºå","æ¥­ç¨®","ä½æ","é»è©²çªå·","HP URL","HPæç¡","Googleè©ä¾¡","å£ã³ãæ°","åªååº¦","åéæ¥æ"];
+  const rows = records.map(r =>
+    headers.map(h => {
+      const v = String(r[h]??"");
+      return v.includes(",") || v.includes('"') || v.includes("\n") ? `"${v.replace(/"/g,'""')}"` : v;
+    }).join(",")
+  );
+  return BOM + [headers.join(","), ...rows].join("\n");
+}
+
+/* ============================================
+   SVG Icons (inline)
+   ============================================ */
+const Icon = ({d, size=16, cls=""}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cls}>
+    <path d={d}/>
+  </svg>
+);
+const MapPinIcon = ({size=16,cls=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cls}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>;
+const SearchIcon = ({size=16,cls=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cls}><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>;
+const DownloadIcon = ({size=16,cls=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cls}><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>;
+const PhoneIcon = ({size=16,cls=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cls}><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>;
+const GlobeIcon = ({size=16,cls=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cls}><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>;
+const StarIcon = ({size=13,cls="",filled=false}) => <svg width={size} height={size} viewBox="0 0 24 24" fill={filled?"currentColor":"none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cls}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
+const AlertIcon = ({size=16,cls=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cls}><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01"/></svg>;
+const ZapIcon = ({size=16,cls=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cls}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>;
+const ClockIcon = ({size=16,cls=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cls}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+const BarChartIcon = ({size=16,cls=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cls}><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>;
+const FilterIcon = ({size=14,cls=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cls}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>;
+const XIcon = ({size=14,cls=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cls}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+
+function renderStars(rating) {
+  const full = Math.floor(rating);
+  const half = rating - full >= 0.3;
+  const stars = [];
+  for (let i=0;i<5;i++) {
+    if (i < full) stars.push(<StarIcon key={i} filled cls="text-yellow-400" />);
+    else if (i === full && half) stars.push(<StarIcon key={i} filled cls="text-yellow-400 opacity-50" />);
+    else stars.push(<StarIcon key={i} cls="text-gray-300" />);
+  }
+  return <span style={{display:"flex",alignItems:"center",gap:"2px"}}>{stars}<span className="ml-1 text-xs text-gray-500 font-medium">{rating}</span></span>;
+}
+
+function catEmoji(cat) {
+  if (cat === "é£²é£åº") return "ð½ï¸";
+  if (cat === "ç¾å®¹å®¤") return "âï¸";
+  if (cat === "æ´éª¨é¢") return "ð";
+  return "ð";
+}
+
+/* ============================================
+   Main App
+   ============================================ */
+function App() {
+  const [area, setArea] = useState("");
+  const [category, setCategory] = useState("é£²é£åº");
+  const [results, setResults] = useState([]);
+  const [isRunning, setIsRunning] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
+  const [currentStore, setCurrentStore] = useState("");
+  const [filterPriority, setFilterPriority] = useState("all");
+  const [usage, setUsage] = useState({ monthly: 0, daily: 0 });
+  const [history, setHistory] = useState([]);
+  const [showAreaDropdown, setShowAreaDropdown] = useState(false);
+  const [logs, setLogs] = useState([]);
+  const logRef = useRef(null);
+
+  const addLog = useCallback((msg) => {
+    setLogs(prev => [...prev, { time: new Date().toLocaleTimeString("ja-JP"), msg }]);
+  }, []);
+
+  useEffect(() => {
+    if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
+  }, [logs]);
+
+  const runCollection = useCallback(async () => {
+    if (!area.trim()) return;
+    setIsRunning(true); setResults([]); setProgress(0); setLogs([]); setFilterPriority("all");
+
+    addLog("ð åééå§: " + area + " Ã " + category);
+    addLog("ð¡ Text Search API å¼ã³åºãä¸­...");
+    await new Promise(r => setTimeout(r, 700));
+
+    const stores = DEMO_DATA[category] || DEMO_DATA["é£²é£åº"];
+    const adjusted = stores.map(s => ({
+      ...s, address: area.includes("å¤§éªå¸ååº") ? s.address : s.address.replace("å¤§éªåºå¤§éªå¸ååº", area)
+    }));
+
+    setTotalItems(adjusted.length);
+    setUsage(prev => ({ monthly: prev.monthly + 1, daily: prev.daily + 1 }));
+    addLog("â " + adjusted.length + " ä»¶ã®åºèãæ¤åº");
+
+    const collected = [];
+    const now = new Date().toLocaleString("ja-JP");
+
+    for (let i = 0; i < adjusted.length; i++) {
+      const s = adjusted[i];
+      setProgress(i + 1);
+      setCurrentStore(s.name);
+      const priority = determinePriority(s.website, s.ratings_total);
+      collected.push({
+        "åºå": s.name, "æ¥­ç¨®": category, "ä½æ": s.address, "é»è©±çªå·": s.phone,
+        "HP URL": s.website, "HPæç¡": s.website ? "ãã" : "ãªã",
+        "Googleè©ä¾¡": s.rating, "å£ã³ãæ°": s.ratings_total, "åªååº¦": priority, "åéæ¥æ": now,
+      });
+      setUsage(prev => ({ monthly: prev.monthly + 1, daily: prev.daily + 1 }));
+      addLog("[" + (i+1) + "/" + adjusted.length + "] " + s.name + " â " + priority);
+      await new Promise(r => setTimeout(r, 100));
+    }
+
+    collected.sort((a,b) => prioritySortKey(a["åªååº¦"]) - prioritySortKey(b["åªååº¦"]));
+    setResults(collected); setCurrentStore("");
+
+    const saikou = collected.filter(r => r["åªååº¦"]==="æé«").length;
+    const kou = collected.filter(r => r["åªååº¦"]==="é«").length;
+    const chuu = collected.filter(r => r["åªååº¦"]==="ä¸­").length;
+    addLog("ð åéå®äºï¼ æé«=" + saikou + " / é«=" + kou + " / ä¸­=" + chuu);
+
+    setHistory(prev => [{ area, category, count: collected.length, saikou, kou, chuu, date: now }, ...prev.slice(0, 9)]);
+    setIsRunning(false);
+  }, [area, category, addLog]);
+
+  const downloadCSV = useCallback(() => {
+    const filtered = filterPriority === "all" ? results : results.filter(r => r["åªååº¦"] === filterPriority);
+    const csv = toCSVString(filtered);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url;
+    a.download = new Date().toISOString().slice(0,10) + "_" + area + "_" + category + ".csv";
+    a.click(); URL.revokeObjectURL(url);
+    addLog("ð¥ CSV ãã¦ã³ã­ã¼ã: " + filtered.length + "ä»¶");
+  }, [results, filterPriority, area, category, addLog]);
+
+  const filtered = filterPriority === "all" ? results : results.filter(r => r["åªååº¦"] === filterPriority);
+  const cnt = { "æé«": results.filter(r=>r["åªååº¦"]==="æé«").length, "é«": results.filter(r=>r["åªååº¦"]==="é«").length, "ä¸­": results.filter(r=>r["åªååº¦"]==="ä¸­").length };
+  const usagePct = Math.min(100, (usage.monthly / 3000) * 100);
+
+  return (
+    <div style={{minHeight:"100vh"}}>
+      {/* Header */}
+      <header className="glass" style={{position:"sticky",top:0,zIndex:30,borderBottom:"1px solid #e2e8f0"}}>
+        <div style={{maxWidth:"1280px",margin:"0 auto",padding:"12px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:"12px"}}>
+          <div style={{display:"flex",alignItems:"center",gap:"12px"}}>
+            <div style={{width:40,height:40,borderRadius:12,background:"linear-gradient(135deg,#2563eb,#4f46e5)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 12px rgba(37,99,235,0.3)"}}>
+              <MapPinIcon size={20} cls="text-white" />
+            </div>
+            <div>
+              <h1 style={{fontSize:18,fontWeight:800,color:"#1e293b",lineHeight:1.2}}>MAP Lead Collector</h1>
+              <p style={{fontSize:11,color:"#94a3b8"}}>Googleããã HPå¶ä½å¶æ¥­ãªã¹ãèªååé</p>
+            </div>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:"12px",flexWrap:"wrap"}}>
+            <div style={{background:"#f1f5f9",borderRadius:10,padding:"6px 14px",display:"flex",alignItems:"center",gap:8,fontSize:12}}>
+              <BarChartIcon size={13} cls="text-gray-400" />
+              <span style={{color:"#64748b"}}>æé</span>
+              <span style={{fontWeight:700,color:"#334155"}}>{usage.monthly.toLocaleString()}</span>
+              <span style={{color:"#94a3b8"}}>/ 3,000</span>
+              <div style={{width:50,height:4,background:"#e2e8f0",borderRadius:2,overflow:"hidden"}}>
+                <div style={{width:usagePct+"%",height:"100%",background:usagePct>90?"#ef4444":usagePct>70?"#f59e0b":"#22c55e",borderRadius:2,transition:"width 0.5s"}}/>
+              </div>
+            </div>
+            <div style={{background:"#f1f5f9",borderRadius:10,padding:"6px 14px",display:"flex",alignItems:"center",gap:8,fontSize:12}}>
+              <ClockIcon size={13} cls="text-gray-400" />
+              <span style={{color:"#64748b"}}>æ¬æ¥</span>
+              <span style={{fontWeight:700,color:"#334155"}}>{usage.daily}</span>
+              <span style={{color:"#94a3b8"}}>/ 100</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div style={{maxWidth:1280,margin:"0 auto",padding:"24px 16px"}}>
+        {/* Search Panel */}
+        <div className="slide-up" style={{background:"#fff",borderRadius:20,boxShadow:"0 4px 24px rgba(0,0,0,0.06)",border:"1px solid #e2e8f0",padding:24,marginBottom:24}}>
+          <div style={{display:"flex",flexWrap:"wrap",gap:16,alignItems:"flex-end"}}>
+            <div style={{flex:"1 1 260px",position:"relative"}}>
+              <label style={{display:"block",fontSize:11,fontWeight:700,color:"#64748b",marginBottom:6,textTransform:"uppercase",letterSpacing:"0.05em"}}>ã¨ãªã¢</label>
+              <div style={{position:"relative"}}>
+                <div style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)"}}><MapPinIcon size={16} cls="text-gray-400" /></div>
+                <input type="text" placeholder="ä¾: å¤§éªå¸ååº" value={area}
+                  onChange={e=>setArea(e.target.value)}
+                  onFocus={()=>setShowAreaDropdown(true)}
+                  onBlur={()=>setTimeout(()=>setShowAreaDropdown(false),200)}
+                  disabled={isRunning}
+                  style={{width:"100%",paddingLeft:40,paddingRight:16,paddingTop:10,paddingBottom:10,borderRadius:14,border:"1px solid #e2e8f0",background:"#f8fafc",fontSize:14,outline:"none"}}
+                />
+                {showAreaDropdown && (
+                  <div style={{position:"absolute",top:"100%",left:0,right:0,marginTop:4,background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,boxShadow:"0 12px 40px rgba(0,0,0,0.1)",zIndex:20,maxHeight:220,overflowY:"auto"}}>
+                    {AREA_PRESETS.filter(a => !area || a.includes(area)).map(a => (
+                      <button key={a} onMouseDown={()=>{setArea(a);setShowAreaDropdown(false)}}
+                        style={{display:"block",width:"100%",textAlign:"left",padding:"10px 16px",fontSize:13,border:"none",background:"transparent",cursor:"pointer"}}
+                        onMouseOver={e=>e.target.style.background="#eff6ff"}
+                        onMouseOut={e=>e.target.style.background="transparent"}>
+                        {a}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div style={{width:200}}>
+              <label style={{display:"block",fontSize:11,fontWeight:700,color:"#64748b",marginBottom:6,textTransform:"uppercase",letterSpacing:"0.05em"}}>æ¥­ç¨®</label>
+              <select value={category} onChange={e=>setCategory(e.target.value)} disabled={isRunning}
+                style={{width:"100%",padding:"10px 36px 10px 16px",borderRadius:14,border:"1px solid #e2e8f0",background:"#f8fafc",fontSize:14,appearance:"none",outline:"none",cursor:"pointer"}}>
+                <option value="é£²é£åº">ð½ï¸ é£²é£åº</option>
+                <option value="ç¾å®¹å®¤">âï¸ ç¾å®¹å®¤</option>
+                <option value="æ´éª¨é¢">ð æ´éª¨é¢</option>
+              </select>
+            </div>
+
+            <button onClick={runCollection} disabled={isRunning || !area.trim()}
+              className={isRunning || !area.trim() ? "" : "btn-primary"}
+              style={{padding:"10px 32px",borderRadius:14,fontSize:14,fontWeight:700,border:"none",cursor: isRunning||!area.trim()?"not-allowed":"pointer",
+                display:"flex",alignItems:"center",gap:8,color:isRunning||!area.trim()?"#94a3b8":"#fff",
+                background:isRunning||!area.trim()?"#e2e8f0":undefined,transition:"all 0.2s",whiteSpace:"nowrap"}}>
+              {isRunning ? (
+                <><svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24"><circle opacity=".25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path opacity=".75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> åéä¸­...</>
+              ) : (
+                <><SearchIcon size={16} /> åééå§</>
+              )}
+            </button>
+          </div>
+
+          {isRunning && (
+            <div className="fade-in" style={{marginTop:20}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"#64748b",marginBottom:6}}>
+                <span style={{display:"flex",alignItems:"center",gap:6}}>
+                  <ZapIcon size={12} cls="text-yellow-500 pulse-anim" />
+                  {currentStore}
+                </span>
+                <span className="font-mono">{progress} / {totalItems}</span>
+              </div>
+              <div style={{width:"100%",background:"#f1f5f9",borderRadius:999,height:8,overflow:"hidden"}}>
+                <div className="progress-bar" style={{width:(totalItems?(progress/totalItems)*100:0)+"%",height:"100%",background:"linear-gradient(90deg,#3b82f6,#6366f1)",borderRadius:999}}/>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Results */}
+        {results.length > 0 && (
+          <div className="slide-up">
+            {/* Summary Cards */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(140px, 1fr))",gap:12,marginBottom:20}}>
+              <div style={{background:"#fff",borderRadius:16,border:"1px solid #e2e8f0",padding:20,textAlign:"center",boxShadow:"0 2px 8px rgba(0,0,0,0.04)"}}>
+                <div style={{fontSize:32,fontWeight:900,color:"#334155"}}>{results.length}</div>
+                <div style={{fontSize:11,color:"#94a3b8",marginTop:2}}>ç·ä»¶æ°</div>
+              </div>
+              {[["æé«","#dc2626","card-saikou","ring-active-saikou"],["é«","#f97316","card-kou","ring-active-kou"],["ä¸­","#0ea5e9","card-chuu","ring-active-chuu"]].map(([p,color,cardCls,ringCls])=>(
+                <button key={p} onClick={()=>setFilterPriority(prev=>prev===p?"all":p)}
+                  className={cardCls + (filterPriority===p?" "+ringCls:"")}
+                  style={{background:"#fff",borderRadius:16,border:"1px solid #e2e8f0",padding:20,textAlign:"center",cursor:"pointer",transition:"all 0.2s",boxShadow:"0 2px 8px rgba(0,0,0,0.04)"}}>
+                  <div style={{fontSize:32,fontWeight:900,color}}>{cnt[p]}</div>
+                  <div style={{fontSize:11,color:"#94a3b8",marginTop:2,display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                    <span style={{width:8,height:8,borderRadius:999,background:color,display:"inline-block"}}/>
+                    åªååº¦ {p}
+                  </div>
+                </button>
+              ))}
+              <button onClick={downloadCSV} className="btn-csv"
+                style={{borderRadius:16,padding:20,textAlign:"center",cursor:"pointer",color:"#fff",border:"none",transition:"all 0.2s",boxShadow:"0 2px 8px rgba(0,0,0,0.04)"}}>
+                <DownloadIcon size={28} cls="mx-auto" />
+                <div style={{fontSize:12,fontWeight:700,marginTop:6}}>CSVåºå</div>
+              </button>
+            </div>
+
+            {/* Filter Badge */}
+            {filterPriority !== "all" && (
+              <div className="fade-in" style={{display:"flex",alignItems:"center",gap:8,marginBottom:12,fontSize:12,color:"#64748b"}}>
+                <FilterIcon cls="text-gray-400" />
+                ãã£ã«ã¿ã¼: åªååº¦ã{filterPriority}ãã®ã¿è¡¨ç¤ºä¸­
+                <button onClick={()=>setFilterPriority("all")} style={{color:"#3b82f6",background:"none",border:"none",cursor:"pointer",fontSize:12,display:"flex",alignItems:"center",gap:2}}>
+                  <XIcon size={12} /> è§£é¤
+                </button>
+              </div>
+            )}
+
+            {/* Table */}
+            <div style={{background:"#fff",borderRadius:20,boxShadow:"0 4px 24px rgba(0,0,0,0.06)",border:"1px solid #e2e8f0",overflow:"hidden",marginBottom:24}}>
+              <div style={{overflowX:"auto"}}>
+                <table style={{width:"100%",fontSize:13,borderCollapse:"collapse"}}>
+                  <thead>
+                    <tr style={{background:"#f8fafc",borderBottom:"1px solid #e2e8f0"}}>
+                      {["#","åºå","ä½æ","é»è©±","HP","è©ä¾¡","å£ã³ã","åªååº¦"].map(h=>(
+                        <th key={h} style={{textAlign:["#","åºå","ä½æ","é»è©±"].includes(h)?"left":"center",padding:"12px 16px",fontSize:10,fontWeight:700,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.05em"}}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((r,i) => {
+                      const isSaikou = r["åªååº¦"]==="æé«";
+                      return (
+                        <tr key={i} className="table-row" style={{borderBottom:"1px solid #f1f5f9",background:isSaikou?"#fef2f2":"transparent",transition:"background 0.15s"}}>
+                          <td style={{padding:"10px 16px",color:"#94a3b8",fontSize:11}}>{i+1}</td>
+                          <td style={{padding:"10px 16px"}}>
+                            <span style={{display:"flex",alignItems:"center",gap:8}}>
+                              <span>{catEmoji(r["æ¥­ç¨®"])}</span>
+                              <span style={{fontWeight:600,color:"#1e293b"}}>{r["åºå"]}</span>
+                            </span>
+                          </td>
+                          <td style={{padding:"10px 16px",color:"#64748b",fontSize:12,maxWidth:260,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r["ä½æ"]}</td>
+                          <td style={{padding:"10px 16px"}}>
+                            {r["é»è©±çªå·"] ? (
+                              <span style={{display:"flex",alignItems:"center",gap:4,fontSize:12,color:"#475569"}}><PhoneIcon size={11} cls="text-gray-400" />{r["é»è©±çªå·"]}</span>
+                            ) : <span style={{color:"#cbd5e1",fontSize:12}}>-</span>}
+                          </td>
+                          <td style={{padding:"10px 16px",textAlign:"center"}}>
+                            {r["HP URL"] ? (
+                              <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"2px 10px",borderRadius:999,background:"#f0f9ff",color:"#0284c7",fontSize:11,fontWeight:500}}>
+                                <GlobeIcon size={11} />ãã
+                              </span>
+                            ) : (
+                              <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"2px 10px",borderRadius:999,background:"#fef2f2",color:"#ef4444",fontSize:11,fontWeight:700}}>
+                                <AlertIcon size={11} />ãªã
+                              </span>
+                            )}
+                          </td>
+                          <td style={{padding:"10px 16px",textAlign:"center"}}>{renderStars(r["Googleè©ä¾¡"])}</td>
+                          <td style={{padding:"10px 16px",textAlign:"center",fontSize:12,color:"#475569"}} className="font-mono">{r["å£ã³ãæ°"]}</td>
+                          <td style={{padding:"10px 16px",textAlign:"center"}}>
+                            <span className={"badge-"+(r["åªååº¦"]==="æé«"?"saikou":r["åªååº¦"]==="é«"?"kou":"chuu")}
+                              style={{display:"inline-flex",alignItems:"center",gap:3,padding:"4px 12px",borderRadius:999,color:"#fff",fontSize:11,fontWeight:700}}>
+                              {r["åªååº¦"]==="æé«" && <ZapIcon size={11} />}
+                              {r["åªååº¦"]}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Log & History */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(340px,1fr))",gap:20}}>
+          {/* Log */}
+          <div style={{background:"#fff",borderRadius:20,boxShadow:"0 4px 24px rgba(0,0,0,0.06)",border:"1px solid #e2e8f0",overflow:"hidden"}}>
+            <div style={{padding:"10px 20px",background:"#1e293b",display:"flex",alignItems:"center",gap:8}}>
+              <span style={{display:"flex",gap:6}}><span style={{width:10,height:10,borderRadius:999,background:"#ef4444"}}/><span style={{width:10,height:10,borderRadius:999,background:"#eab308"}}/><span style={{width:10,height:10,borderRadius:999,background:"#22c55e"}}/></span>
+              <span className="font-mono" style={{fontSize:11,color:"#64748b",marginLeft:8}}>å®è¡ã­ã°</span>
+            </div>
+            <div ref={logRef} className="terminal" style={{padding:16,maxHeight:260,overflowY:"auto"}}>
+              {logs.length === 0 ? (
+                <p className="font-mono" style={{fontSize:12,color:"#475569"}}>
+                  ã¨ãªã¢ã¨æ¥­ç¨®ãé¸ãã§ãåééå§ããæ¼ãã¦ãã ãã...
+                </p>
+              ) : logs.map((l,i) => (
+                <div key={i} className="font-mono" style={{fontSize:11,marginBottom:2}}>
+                  <span style={{color:"#64748b"}}>[{l.time}]</span>{" "}
+                  <span style={{color:l.msg.includes("å®äº")||l.msg.includes("ð")?"#4ade80":l.msg.includes("æé«")?"#f87171":l.msg.includes("é«")?"#fb923c":"#cbd5e1"}}>{l.msg}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* History */}
+          <div style={{background:"#fff",borderRadius:20,boxShadow:"0 4px 24px rgba(0,0,0,0.06)",border:"1px solid #e2e8f0",overflow:"hidden"}}>
+            <div style={{padding:"14px 20px",borderBottom:"1px solid #f1f5f9"}}>
+              <h3 style={{fontSize:14,fontWeight:700,color:"#334155",display:"flex",alignItems:"center",gap:8}}>
+                <ClockIcon size={14} cls="text-gray-400" /> åéå±¥æ­´
+              </h3>
+            </div>
+            <div style={{padding:16,maxHeight:260,overflowY:"auto"}}>
+              {history.length === 0 ? (
+                <p style={{fontSize:12,color:"#94a3b8",textAlign:"center",padding:24}}>ã¾ã å±¥æ­´ãããã¾ãã</p>
+              ) : history.map((h,i) => (
+                <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:"#f8fafc",borderRadius:12,padding:"10px 16px",marginBottom:8}}>
+                  <div>
+                    <span style={{fontSize:13,fontWeight:600,color:"#334155"}}>{h.area}</span>
+                    <span style={{margin:"0 8px",color:"#cbd5e1"}}>Ã</span>
+                    <span style={{fontSize:13,color:"#64748b"}}>{catEmoji(h.category)} {h.category}</span>
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:10}}>
+                    <span className="font-mono" style={{fontSize:11,color:"#64748b"}}>{h.count}ä»¶</span>
+                    <div style={{display:"flex",gap:4}}>
+                      <span style={{padding:"2px 6px",fontSize:10,borderRadius:6,background:"#fee2e2",color:"#dc2626",fontWeight:700}}>{h.saikou}</span>
+                      <span style={{padding:"2px 6px",fontSize:10,borderRadius:6,background:"#ffedd5",color:"#ea580c",fontWeight:700}}>{h.kou}</span>
+                      <span style={{padding:"2px 6px",fontSize:10,borderRadius:6,background:"#e0f2fe",color:"#0284c7",fontWeight:700}}>{h.chuu}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{marginTop:40,textAlign:"center",fontSize:11,color:"#94a3b8",paddingBottom:24}}>
+          <p style={{fontWeight:600}}>MAP Lead Collector</p>
+          <p style={{marginTop:4}}>ãã¢ã¢ã¼ãåä½ä¸­ ã» æ¬çªå©ç¨æã¯ config.py ã« APIã­ã¼ãè¨­å®</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
